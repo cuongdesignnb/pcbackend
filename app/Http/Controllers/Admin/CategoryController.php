@@ -35,8 +35,14 @@ class CategoryController extends Controller
 
     // Reserved slugs that conflict with frontend routes
     private static array $reservedSlugs = [
+        // Legacy English routes
         'about', 'account', 'auth', 'blog', 'cart', 'checkout',
         'configurator', 'contact', 'orders', 'shipping', 'warranty',
+        // Vietnamese routes
+        'gioi-thieu', 'tai-khoan', 'tin-tuc', 'gio-hang', 'thanh-toan',
+        'cau-hinh', 'lien-he', 'don-hang', 'van-chuyen', 'bao-hanh',
+        'dang-nhap', 'dang-ky', 'quen-mat-khau',
+        // System
         'admin', 'api', 'san-pham',
     ];
 
