@@ -9,13 +9,13 @@ const props = defineProps({
 
 // Group labels in Vietnamese
 const groupLabels = {
-    general: 'Thong tin chung',
-    contact: 'Lien he',
-    social: 'Mang xa hoi',
+    general: 'Thông tin chung',
+    contact: 'Liên hệ',
+    social: 'Mạng xã hội',
     seo: 'SEO',
-    homepage: 'Trang chu',
-    payment: 'Thanh toan',
-    shipping: 'Van chuyen',
+    homepage: 'Trang chủ',
+    payment: 'Thanh toán',
+    shipping: 'Vận chuyển',
     ai: 'AI (ChatGPT / Gemini)',
 };
 
@@ -85,14 +85,14 @@ function getSettingsForGroup(group) {
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h3 class="text-xl font-bold text-gray-900">Cài đặt website</h3>
-                <p class="text-sm text-gray-500 mt-1">Quản lý thông tin và cấu hình chung cho website</p>
+                <h3 class="text-xl font-bold text-slate-200">Cài đặt website</h3>
+                <p class="text-sm text-slate-400 mt-1">Quản lý thông tin và cấu hình chung cho website</p>
             </div>
         </div>
 
         <!-- Success flash -->
-        <div v-if="flash" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
-            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div v-if="flash" class="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             {{ flash }}
         </div>
 
@@ -107,8 +107,8 @@ function getSettingsForGroup(group) {
                         :class="[
                             'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors text-left',
                             activeTab === group
-                                ? 'bg-indigo-50 text-indigo-700'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                ? 'bg-cyan-500/10 text-cyan-400'
+                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                         ]"
                     >
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,16 +123,16 @@ function getSettingsForGroup(group) {
             <div class="flex-1">
                 <form @submit.prevent="submit">
                     <template v-for="group in groups" :key="group">
-                        <div v-show="activeTab === group" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                                <h4 class="text-base font-semibold text-gray-900">{{ groupLabels[group] || group }}</h4>
+                        <div v-show="activeTab === group" class="bg-slate-900 rounded-xl shadow-none border border-slate-800/60 overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-800/40 bg-slate-800/40">
+                                <h4 class="text-base font-semibold text-slate-200">{{ groupLabels[group] || group }}</h4>
                             </div>
 
                             <div class="p-6 space-y-5">
                                 <div v-for="item in getSettingsForGroup(group)" :key="item.key">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    <label class="block text-sm font-medium text-slate-300 mb-1.5">
                                         {{ item.label }}
-                                        <span v-if="!item.is_public" class="text-xs text-gray-400 ml-1">(nội bộ)</span>
+                                        <span v-if="!item.is_public" class="text-xs text-slate-500 ml-1">(nội bộ)</span>
                                     </label>
 
                                     <!-- Text / Image URL / Color input -->
@@ -142,13 +142,13 @@ function getSettingsForGroup(group) {
                                             :type="item.type === 'color' ? 'color' : 'text'"
                                             :placeholder="item.label"
                                             :class="[
-                                                'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500',
+                                                'w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50',
                                                 item.type === 'color' ? 'h-10 p-1' : ''
                                             ]"
                                         />
                                         <!-- Image preview -->
                                         <div v-if="item.type === 'image' && formData[item.key]" class="mt-2">
-                                            <img :src="formData[item.key]" class="h-12 object-contain rounded border border-gray-200 p-1 bg-gray-50" />
+                                            <img :src="formData[item.key]" class="h-12 object-contain rounded border border-slate-800/60 p-1 bg-slate-800/40" />
                                         </div>
                                     </template>
 
@@ -158,7 +158,7 @@ function getSettingsForGroup(group) {
                                         v-model="formData[item.key]"
                                         :placeholder="item.label"
                                         rows="3"
-                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
                                     />
 
                                     <!-- Boolean toggle -->
@@ -169,8 +169,8 @@ function getSettingsForGroup(group) {
                                             @change="formData[item.key] = $event.target.checked ? '1' : '0'"
                                             class="sr-only peer"
                                         />
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                        <span class="ml-3 text-sm text-gray-500">{{ formData[item.key] === '1' || formData[item.key] === true || formData[item.key] === 'true' ? 'Bật' : 'Tắt' }}</span>
+                                        <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-900 after:border-slate-700/50 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                                        <span class="ml-3 text-sm text-slate-400">{{ formData[item.key] === '1' || formData[item.key] === true || formData[item.key] === 'true' ? 'Bật' : 'Tắt' }}</span>
                                     </label>
 
                                     <!-- Number -->
@@ -179,14 +179,14 @@ function getSettingsForGroup(group) {
                                         v-model="formData[item.key]"
                                         type="number"
                                         :placeholder="item.label"
-                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
                                     />
 
                                     <!-- Select -->
                                     <select
                                         v-else-if="item.type === 'select' && item.options"
                                         v-model="formData[item.key]"
-                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
                                     >
                                         <option v-for="opt in (typeof item.options === 'string' ? JSON.parse(item.options) : item.options)?.choices || []" :key="opt" :value="opt">
                                             {{ opt }}
@@ -199,10 +199,10 @@ function getSettingsForGroup(group) {
                                         v-model="formData[item.key]"
                                         type="text"
                                         :placeholder="item.label"
-                                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50"
                                     />
 
-                                    <p class="text-xs text-gray-400 mt-1">{{ item.key }}</p>
+                                    <p class="text-xs text-slate-500 mt-1">{{ item.key }}</p>
                                 </div>
                             </div>
                         </div>
@@ -213,7 +213,7 @@ function getSettingsForGroup(group) {
                         <button
                             type="submit"
                             :disabled="processing"
-                            class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold disabled:opacity-50 transition-colors shadow-sm"
+                            class="px-6 py-2.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm font-semibold disabled:opacity-50 transition-colors shadow-none"
                         >
                             <span v-if="processing" class="flex items-center gap-2">
                                 <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>

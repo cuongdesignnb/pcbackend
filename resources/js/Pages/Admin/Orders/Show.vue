@@ -54,30 +54,30 @@ const payLabel = {
     <AdminLayout title="Chi tiết đơn hàng">
         <div
             v-if="flash?.success"
-            class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm"
+            class="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-sm"
         >
             {{ flash.success }}
         </div>
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900">
+            <h3 class="text-lg font-semibold text-slate-200">
                 Đơn #{{ order.order_number || order.order_code }}
             </h3>
             <Link
                 href="/admin/orders"
-                class="text-sm text-gray-500 hover:text-gray-700"
+                class="text-sm text-slate-400 hover:text-slate-300"
                 >← Quay lại</Link
             >
         </div>
         <div class="grid grid-cols-3 gap-4 mb-6">
             <div
-                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+                class="bg-slate-900 rounded-lg shadow-none border border-slate-800/60 p-4"
             >
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                <h4 class="text-sm font-semibold text-slate-300 mb-3">
                     Thông tin KH
                 </h4>
-                <div class="space-y-1 text-sm text-gray-600">
+                <div class="space-y-1 text-sm text-slate-400">
                     <p>
-                        <span class="text-gray-400">Tên:</span>
+                        <span class="text-slate-500">Tên:</span>
                         {{
                             order.shipping_name ||
                             order.customer_name ||
@@ -85,13 +85,13 @@ const payLabel = {
                         }}
                     </p>
                     <p>
-                        <span class="text-gray-400">SĐT:</span>
+                        <span class="text-slate-500">SĐT:</span>
                         {{
                             order.shipping_phone || order.customer_phone || "—"
                         }}
                     </p>
                     <p>
-                        <span class="text-gray-400">Địa chỉ:</span>
+                        <span class="text-slate-500">Địa chỉ:</span>
                         {{
                             [
                                 order.shipping_address,
@@ -104,21 +104,21 @@ const payLabel = {
                         }}
                     </p>
                     <p v-if="order.notes">
-                        <span class="text-gray-400">Ghi chú:</span>
+                        <span class="text-slate-500">Ghi chú:</span>
                         {{ order.notes }}
                     </p>
                 </div>
             </div>
             <div
-                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+                class="bg-slate-900 rounded-lg shadow-none border border-slate-800/60 p-4"
             >
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                <h4 class="text-sm font-semibold text-slate-300 mb-3">
                     Trạng thái đơn
                 </h4>
                 <div class="space-y-3">
                     <select
                         v-model="newStatus"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"
                     >
                         <option v-for="(l, k) in statusLabel" :value="k">
                             {{ l }}
@@ -126,22 +126,22 @@ const payLabel = {
                     </select>
                     <button
                         @click="updateStatus"
-                        class="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+                        class="w-full px-3 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700"
                     >
                         Cập nhật trạng thái
                     </button>
                 </div>
             </div>
             <div
-                class="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+                class="bg-slate-900 rounded-lg shadow-none border border-slate-800/60 p-4"
             >
-                <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                <h4 class="text-sm font-semibold text-slate-300 mb-3">
                     Thanh toán
                 </h4>
                 <div class="space-y-3">
                     <select
                         v-model="newPayStatus"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"
                     >
                         <option v-for="(l, k) in payLabel" :value="k">
                             {{ l }}
@@ -149,7 +149,7 @@ const payLabel = {
                     </select>
                     <button
                         @click="updatePayment"
-                        class="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+                        class="w-full px-3 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700"
                     >
                         Cập nhật thanh toán
                     </button>
@@ -157,56 +157,56 @@ const payLabel = {
             </div>
         </div>
         <div
-            class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-4"
+            class="bg-slate-900 rounded-lg shadow-none border border-slate-800/60 overflow-hidden mb-4"
         >
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-slate-800/40">
+                <thead class="bg-slate-800/40">
                     <tr>
                         <th
-                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                            class="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase"
                         >
                             Sản phẩm
                         </th>
                         <th
-                            class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+                            class="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase"
                         >
                             Đơn giá
                         </th>
                         <th
-                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+                            class="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase"
                         >
                             SL
                         </th>
                         <th
-                            class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+                            class="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase"
                         >
                             Thành tiền
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody class="divide-y divide-slate-800/40">
                     <tr v-for="item in order.items" :key="item.id">
-                        <td class="px-4 py-3 text-sm text-gray-900">
+                        <td class="px-4 py-3 text-sm text-slate-200">
                             {{ item.product?.name || item.product_name || "—" }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 text-right">
+                        <td class="px-4 py-3 text-sm text-slate-400 text-right">
                             {{ formatPrice(item.price) }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-500 text-center">
+                        <td class="px-4 py-3 text-sm text-slate-400 text-center">
                             {{ item.quantity }}
                         </td>
                         <td
-                            class="px-4 py-3 text-sm text-gray-900 text-right font-medium"
+                            class="px-4 py-3 text-sm text-slate-200 text-right font-medium"
                         >
                             {{ formatPrice(item.price * item.quantity) }}
                         </td>
                     </tr>
                 </tbody>
-                <tfoot class="bg-gray-50">
+                <tfoot class="bg-slate-800/40">
                     <tr v-if="order.subtotal">
                         <td
                             colspan="3"
-                            class="px-4 py-2 text-sm text-gray-500 text-right"
+                            class="px-4 py-2 text-sm text-slate-400 text-right"
                         >
                             Tạm tính
                         </td>
@@ -217,7 +217,7 @@ const payLabel = {
                     <tr v-if="order.discount">
                         <td
                             colspan="3"
-                            class="px-4 py-2 text-sm text-gray-500 text-right"
+                            class="px-4 py-2 text-sm text-slate-400 text-right"
                         >
                             Giảm giá
                         </td>
@@ -228,7 +228,7 @@ const payLabel = {
                     <tr v-if="order.shipping_fee">
                         <td
                             colspan="3"
-                            class="px-4 py-2 text-sm text-gray-500 text-right"
+                            class="px-4 py-2 text-sm text-slate-400 text-right"
                         >
                             Phí ship
                         </td>
@@ -239,12 +239,12 @@ const payLabel = {
                     <tr>
                         <td
                             colspan="3"
-                            class="px-4 py-3 text-sm font-semibold text-gray-900 text-right"
+                            class="px-4 py-3 text-sm font-semibold text-slate-200 text-right"
                         >
                             Tổng cộng
                         </td>
                         <td
-                            class="px-4 py-3 text-base font-bold text-indigo-600 text-right"
+                            class="px-4 py-3 text-base font-bold text-cyan-500 text-right"
                         >
                             {{ formatPrice(order.total) }}
                         </td>

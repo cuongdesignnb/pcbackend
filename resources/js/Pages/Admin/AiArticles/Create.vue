@@ -121,7 +121,7 @@ Cach chon man hinh cho do hoa"
                             <div class="relative">
                                 <input type="checkbox" v-model="form.auto_publish" class="sr-only peer" />
                                 <div class="w-11 h-6 bg-slate-700 rounded-full peer-checked:bg-cyan-500 transition-colors"></div>
-                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-slate-900 rounded-full shadow peer-checked:translate-x-5 transition-transform"></div>
                             </div>
                             <div>
                                 <span class="text-sm font-medium text-slate-300">Tu dong dang bai</span>

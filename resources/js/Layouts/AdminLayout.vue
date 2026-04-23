@@ -23,51 +23,51 @@ const navGroups = [
         ],
     },
     {
-        label: 'Ban hang',
+        label: 'Bán hàng',
         key: 'sales',
         items: [
-            { name: 'Don hang', href: '/admin/orders', icon: 'order' },
-            { name: 'Ma giam gia', href: '/admin/coupons', icon: 'coupon' },
+            { name: 'Đơn hàng', href: '/admin/orders', icon: 'order' },
+            { name: 'Mã giảm giá', href: '/admin/coupons', icon: 'coupon' },
         ],
     },
     {
-        label: 'San pham',
+        label: 'Sản phẩm',
         key: 'catalog',
         items: [
-            { name: 'Tat ca san pham', href: '/admin/products', icon: 'product' },
-            { name: 'Danh muc', href: '/admin/categories', icon: 'folder' },
-            { name: 'Thuong hieu', href: '/admin/brands', icon: 'tag' },
-            { name: 'Bo loc', href: '/admin/filters', icon: 'filter' },
-            { name: 'Loai linh kien', href: '/admin/component-types', icon: 'cpu' },
-            { name: 'Tuong thich', href: '/admin/compatibility', icon: 'compat' },
+            { name: 'Tất cả sản phẩm', href: '/admin/products', icon: 'product' },
+            { name: 'Danh mục', href: '/admin/categories', icon: 'folder' },
+            { name: 'Thương hiệu', href: '/admin/brands', icon: 'tag' },
+            { name: 'Bộ lọc', href: '/admin/filters', icon: 'filter' },
+            { name: 'Loại linh kiện', href: '/admin/component-types', icon: 'cpu' },
+            { name: 'Tương thích', href: '/admin/compatibility', icon: 'compat' },
         ],
     },
     {
-        label: 'Noi dung',
+        label: 'Nội dung',
         key: 'content',
         items: [
-            { name: 'Bai viet', href: '/admin/posts', icon: 'post' },
-            { name: 'DM bai viet', href: '/admin/post-categories', icon: 'category' },
-            { name: 'AI Bai viet', href: '/admin/ai-articles', icon: 'ai' },
-            { name: 'Trang tinh', href: '/admin/pages', icon: 'page' },
+            { name: 'Bài viết', href: '/admin/posts', icon: 'post' },
+            { name: 'DM bài viết', href: '/admin/post-categories', icon: 'category' },
+            { name: 'AI Bài viết', href: '/admin/ai-articles', icon: 'ai' },
+            { name: 'Trang tĩnh', href: '/admin/pages', icon: 'page' },
             { name: 'Banner', href: '/admin/banners', icon: 'banner' },
-            { name: 'Thu vien Media', href: '/admin/media', icon: 'media' },
+            { name: 'Thư viện Media', href: '/admin/media', icon: 'media' },
         ],
     },
     {
-        label: 'Khach hang',
+        label: 'Khách hàng',
         key: 'customers',
         items: [
-            { name: 'Danh sach KH', href: '/admin/customers', icon: 'user' },
-            { name: 'Danh gia', href: '/admin/reviews', icon: 'star' },
+            { name: 'Danh sách KH', href: '/admin/customers', icon: 'user' },
+            { name: 'Đánh giá', href: '/admin/reviews', icon: 'star' },
         ],
     },
     {
-        label: 'He thong',
+        label: 'Hệ thống',
         key: 'system',
         items: [
             { name: 'Menu', href: '/admin/menus', icon: 'menu' },
-            { name: 'Cai dat', href: '/admin/settings', icon: 'settings' },
+            { name: 'Cài đặt', href: '/admin/settings', icon: 'settings' },
         ],
     },
 ];
@@ -207,7 +207,7 @@ const icons = {
                             <p class="text-xs font-semibold text-slate-200 truncate">{{ user?.name || 'Admin' }}</p>
                             <p class="text-[10px] text-slate-500 truncate">{{ user?.email }}</p>
                         </div>
-                        <Link href="/logout" method="post" as="button" class="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded" title="Dang xuat">
+                        <Link href="/logout" method="post" as="button" class="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded" title="Đăng xuất">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         </Link>
                     </template>
@@ -233,7 +233,7 @@ const icons = {
                             v-if="sidebarOpen"
                             @click="sidebarCollapsed = !sidebarCollapsed"
                             class="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-colors hidden lg:block"
-                            :title="sidebarCollapsed ? 'Mo rong' : 'Thu gon'"
+                            :title="sidebarCollapsed ? 'Mở rộng' : 'Thu gọn'"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path v-if="sidebarCollapsed" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
@@ -252,7 +252,7 @@ const icons = {
                             <input
                                 v-model="searchQuery"
                                 type="text"
-                                placeholder="Tim kiem..."
+                                placeholder="Tìm kiếm..."
                                 class="w-56 pl-9 pr-3 py-2 bg-slate-800/60 border border-slate-700/50 rounded-lg text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-colors"
                             />
                         </div>
