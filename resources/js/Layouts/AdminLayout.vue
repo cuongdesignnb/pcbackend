@@ -290,7 +290,47 @@ const icons = {
 </style>
 
 <style>
-/* Global admin form dark theme */
+/* ===== GLOBAL ADMIN DARK THEME ===== */
+
+/* Root: ALL text defaults to light */
+.min-h-screen.bg-slate-950 {
+    color: #e2e8f0;
+}
+
+/* Headings */
+.min-h-screen.bg-slate-950 h1,
+.min-h-screen.bg-slate-950 h2,
+.min-h-screen.bg-slate-950 h3,
+.min-h-screen.bg-slate-950 h4,
+.min-h-screen.bg-slate-950 h5,
+.min-h-screen.bg-slate-950 h6 {
+    color: #f1f5f9;
+}
+
+/* Paragraphs, spans, divs inherit */
+.min-h-screen.bg-slate-950 p,
+.min-h-screen.bg-slate-950 span,
+.min-h-screen.bg-slate-950 div,
+.min-h-screen.bg-slate-950 li,
+.min-h-screen.bg-slate-950 td,
+.min-h-screen.bg-slate-950 th {
+    color: inherit;
+}
+
+/* Labels */
+.min-h-screen.bg-slate-950 label {
+    color: #cbd5e1;
+}
+
+/* Links */
+.min-h-screen.bg-slate-950 a {
+    color: #67e8f9;
+}
+.min-h-screen.bg-slate-950 a:hover {
+    color: #a5f3fc;
+}
+
+/* Form inputs */
 .min-h-screen.bg-slate-950 input[type="text"],
 .min-h-screen.bg-slate-950 input[type="number"],
 .min-h-screen.bg-slate-950 input[type="email"],
@@ -301,6 +341,7 @@ const icons = {
 .min-h-screen.bg-slate-950 input[type="date"],
 .min-h-screen.bg-slate-950 input[type="datetime-local"],
 .min-h-screen.bg-slate-950 input[type="time"],
+.min-h-screen.bg-slate-950 input:not([type]),
 .min-h-screen.bg-slate-950 textarea,
 .min-h-screen.bg-slate-950 select {
     background-color: rgba(30, 41, 59, 0.6) !important;
@@ -322,14 +363,39 @@ const icons = {
     background-color: #1e293b;
     color: #e2e8f0;
 }
-.min-h-screen.bg-slate-950 input[type="checkbox"] {
+
+/* Checkbox & Radio */
+.min-h-screen.bg-slate-950 input[type="checkbox"],
+.min-h-screen.bg-slate-950 input[type="radio"] {
     background-color: rgba(30, 41, 59, 0.8) !important;
     border-color: rgba(71, 85, 105, 0.6) !important;
+    color: #06b6d4 !important;
 }
-.min-h-screen.bg-slate-950 input[type="checkbox"]:checked {
+.min-h-screen.bg-slate-950 input[type="checkbox"]:checked,
+.min-h-screen.bg-slate-950 input[type="radio"]:checked {
     background-color: #06b6d4 !important;
     border-color: #06b6d4 !important;
 }
+
+/* Tables */
+.min-h-screen.bg-slate-950 table {
+    color: #e2e8f0;
+}
+.min-h-screen.bg-slate-950 thead th {
+    color: #94a3b8 !important;
+}
+.min-h-screen.bg-slate-950 tbody td {
+    color: #cbd5e1;
+}
+.min-h-screen.bg-slate-950 tr:hover td {
+    color: #e2e8f0;
+}
+
+/* Buttons - keep specific Tailwind colors but fix text */
+.min-h-screen.bg-slate-950 button {
+    color: inherit;
+}
+
 /* Rich editor / TipTap */
 .min-h-screen.bg-slate-950 .tiptap,
 .min-h-screen.bg-slate-950 .ProseMirror {
@@ -340,8 +406,61 @@ const icons = {
 .min-h-screen.bg-slate-950 .tiptap .is-editor-empty:first-child::before {
     color: #64748b !important;
 }
-/* Labels readable */
-.min-h-screen.bg-slate-950 label {
-    color: #cbd5e1;
+/* Editor toolbar */
+.min-h-screen.bg-slate-950 .editor-toolbar,
+.min-h-screen.bg-slate-950 [class*="toolbar"],
+.min-h-screen.bg-slate-950 [class*="menu-bar"] {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    border-color: rgba(51, 65, 85, 0.5) !important;
+}
+.min-h-screen.bg-slate-950 .editor-toolbar button,
+.min-h-screen.bg-slate-950 [class*="toolbar"] button,
+.min-h-screen.bg-slate-950 [class*="menu-bar"] button {
+    color: #94a3b8 !important;
+}
+.min-h-screen.bg-slate-950 .editor-toolbar button:hover,
+.min-h-screen.bg-slate-950 [class*="toolbar"] button:hover,
+.min-h-screen.bg-slate-950 [class*="menu-bar"] button:hover {
+    color: #e2e8f0 !important;
+    background-color: rgba(51, 65, 85, 0.5) !important;
+}
+.min-h-screen.bg-slate-950 .editor-toolbar button.is-active,
+.min-h-screen.bg-slate-950 [class*="toolbar"] button.is-active,
+.min-h-screen.bg-slate-950 [class*="menu-bar"] button.is-active {
+    color: #06b6d4 !important;
+    background-color: rgba(6, 182, 212, 0.1) !important;
+}
+
+/* File input */
+.min-h-screen.bg-slate-950 input[type="file"] {
+    color: #94a3b8;
+}
+.min-h-screen.bg-slate-950 input[type="file"]::file-selector-button {
+    background-color: #334155;
+    color: #e2e8f0;
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+}
+
+/* Pagination */
+.min-h-screen.bg-slate-950 nav[aria-label*="Pagination"] span,
+.min-h-screen.bg-slate-950 nav[aria-label*="Pagination"] a,
+.min-h-screen.bg-slate-950 nav[aria-label*="Pagination"] button {
+    color: #94a3b8;
+}
+
+/* Scrollbar for main content */
+.min-h-screen.bg-slate-950 ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.min-h-screen.bg-slate-950 ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+}
+.min-h-screen.bg-slate-950 ::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.4);
+    border-radius: 9999px;
 }
 </style>
