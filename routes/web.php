@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\AiArticleController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -114,4 +115,13 @@ Route::prefix('admin')->middleware(['web'])->name('admin.')->group(function () {
     // Settings
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+
+    // AI Articles
+    Route::get('ai-articles', [AiArticleController::class, 'index'])->name('ai-articles.index');
+    Route::get('ai-articles/create', [AiArticleController::class, 'create'])->name('ai-articles.create');
+    Route::post('ai-articles', [AiArticleController::class, 'store'])->name('ai-articles.store');
+    Route::get('ai-articles/{aiArticle}', [AiArticleController::class, 'show'])->name('ai-articles.show');
+    Route::post('ai-articles/{aiArticle}/run', [AiArticleController::class, 'run'])->name('ai-articles.run');
+    Route::delete('ai-articles/{aiArticle}', [AiArticleController::class, 'destroy'])->name('ai-articles.destroy');
+    Route::post('ai-articles/generate-single', [AiArticleController::class, 'generateSingle'])->name('ai-articles.generate-single');
 });

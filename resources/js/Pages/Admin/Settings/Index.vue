@@ -9,13 +9,14 @@ const props = defineProps({
 
 // Group labels in Vietnamese
 const groupLabels = {
-    general: 'Thông tin chung',
-    contact: 'Liên hệ',
-    social: 'Mạng xã hội',
+    general: 'Thong tin chung',
+    contact: 'Lien he',
+    social: 'Mang xa hoi',
     seo: 'SEO',
-    homepage: 'Trang chủ',
-    payment: 'Thanh toán',
-    shipping: 'Vận chuyển',
+    homepage: 'Trang chu',
+    payment: 'Thanh toan',
+    shipping: 'Van chuyen',
+    ai: 'AI (ChatGPT / Gemini)',
 };
 
 const groupIcons = {
@@ -26,6 +27,7 @@ const groupIcons = {
     homepage: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
     payment: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
     shipping: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
+    ai: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
 };
 
 const groups = computed(() => Object.keys(props.settings || {}));
