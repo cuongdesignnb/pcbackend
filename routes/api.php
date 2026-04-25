@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PcBuilderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +52,9 @@ Route::prefix('v1')->group(function () {
 
     // Settings
     Route::get('/settings', [SettingController::class, 'index']);
+
+    // Search
+    Route::get('/search', [SearchController::class, 'index']);
 
     // Locations
     Route::get('/locations/provinces', [LocationController::class, 'provinces']);
