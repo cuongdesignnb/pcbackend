@@ -27,6 +27,27 @@ function destroy(id) {
 function formatPrice(p) { return new Intl.NumberFormat('vi-VN').format(p) + '₫'; }
 const statusMap = { active: 'Đang bán', inactive: 'Ẩn', out_of_stock: 'Hết hàng' };
 const statusColor = { active: 'bg-green-100 text-emerald-400', inactive: 'bg-slate-800/60 text-slate-400', out_of_stock: 'bg-red-100 text-red-700' };
+
+// Import
+const showImport = ref(false);
+const importFile = ref(null);
+const importing = ref(false);
+function onFileChange(e) { importFile.value = e.target.files[0]; }
+function submitImport() {
+    if (!importFile.value) return;
+    importing.value = true;
+    router.post('/admin/products-import', { file: importFile.value }, {
+        forceFormData: true,
+        onFinish: () => { importing.value = false; showImport.value = false; importFile.value = null; }
+    });
+}
+function exportUrl() {
+    const params = new URLSearchParams();
+    if (search.value) params.set('search', search.value);
+    if (categoryId.value) params.set('category_id', categoryId.value);
+    if (brandId.value) params.set('brand_id', brandId.value);
+    return '/admin/products-export?' + params.toString();
+}
 </script>
 <template>
 <AdminLayout title="Sản phẩm">
@@ -34,8 +55,16 @@ const statusColor = { active: 'bg-green-100 text-emerald-400', inactive: 'bg-sla
     <div v-if="flash?.error" class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ flash.error }}</div>
     <div class="bg-slate-900 rounded-lg shadow-none border border-slate-800/60 p-4 mb-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
                 <Link href="/admin/products/create" class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm font-medium">+ Thêm sản phẩm</Link>
+                <a :href="exportUrl()" class="px-3 py-2 bg-emerald-600/80 text-white rounded-lg hover:bg-emerald-600 text-sm font-medium inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Xuất Excel
+                </a>
+                <button @click="showImport = true" class="px-3 py-2 bg-amber-600/80 text-white rounded-lg hover:bg-amber-600 text-sm font-medium inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Nhập Excel
+                </button>
             </div>
             <div class="flex items-center gap-3">
                 <input v-model="search" placeholder="Tìm tên, SKU..." class="border border-slate-700/50 rounded-lg px-3 py-2 text-sm w-48 focus:ring-2 focus:ring-cyan-500/50">
@@ -102,5 +131,23 @@ const statusColor = { active: 'bg-green-100 text-emerald-400', inactive: 'bg-sla
             :disabled="!link.url" :class="link.active ? 'bg-cyan-600 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800/40'"
             class="px-3 py-1.5 text-sm border border-slate-700/50 rounded disabled:opacity-40" v-html="link.label"/>
     </div>
+    <!-- Import Modal -->
+    <Teleport to="body">
+        <div v-if="showImport" class="fixed inset-0 z-50 flex items-center justify-center">
+            <div class="absolute inset-0 bg-black/60" @click="showImport = false"></div>
+            <div class="relative bg-slate-900 rounded-xl border border-slate-700/50 p-6 w-full max-w-md shadow-2xl">
+                <h3 class="text-lg font-semibold text-slate-200 mb-4">Nhập sản phẩm từ CSV</h3>
+                <p class="text-sm text-slate-400 mb-4">File CSV cần có header: ID, Tên sản phẩm, SKU, Slug, Danh mục, Thương hiệu, Giá gốc, Giá sale, Tồn kho, Trạng thái, ...</p>
+                <p class="text-xs text-slate-500 mb-4">Tip: Xuất Excel trước để lấy mẫu file, sửa rồi import lại.</p>
+                <input type="file" accept=".csv,.txt" @change="onFileChange" class="block w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cyan-600 file:text-white hover:file:bg-cyan-700 mb-4">
+                <div class="flex justify-end gap-2">
+                    <button @click="showImport = false" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200">Hủy</button>
+                    <button @click="submitImport" :disabled="!importFile || importing" class="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700 disabled:opacity-50">
+                        {{ importing ? 'Đang import...' : 'Import' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Teleport>
 </AdminLayout>
 </template>

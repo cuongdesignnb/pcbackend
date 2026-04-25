@@ -46,6 +46,8 @@ Route::prefix('admin')->middleware(['web'])->name('admin.')->group(function () {
 
     // Products
     Route::resource('products', ProductController::class);
+    Route::get('products-export', [ProductController::class, 'export'])->name('products.export');
+    Route::post('products-import', [ProductController::class, 'import'])->name('products.import');
 
     // Categories
     Route::resource('categories', CategoryController::class);
@@ -77,6 +79,8 @@ Route::prefix('admin')->middleware(['web'])->name('admin.')->group(function () {
 
     // Posts
     Route::resource('posts', PostController::class);
+    Route::get('posts-export', [PostController::class, 'export'])->name('posts.export');
+    Route::post('posts-import', [PostController::class, 'import'])->name('posts.import');
     Route::resource('post-categories', PostCategoryController::class);
 
     // Pages
