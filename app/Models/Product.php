@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -34,9 +35,31 @@ class Product extends Model
         'meta_description',
         'views_count',
         'sold_count',
+        'barcode',
+        'inventory_source',
+        'provider',
+        'remote_product_id',
+        'kiot_product_id',
+        'kiot_sync_status',
+        'kiot_availability_status',
+        'kiot_is_under_repair',
+        'kiot_sellable',
+        'kiot_has_serial',
+        'kiot_physical_quantity',
+        'kiot_reserved_quantity',
+        'kiot_available_quantity',
+        'kiot_retail_price',
+        'kiot_selected_price',
+        'kiot_price_fallback_used',
+        'kiot_sync_checksum',
+        'show_on_pc_website',
+        'kiot_remote_updated_at',
+        'kiot_synced_at',
+        'kiot_sync_error_code',
+        'kiot_sync_error_message',
     ];
 
-    protected $appends = ['quantity'];
+    protected $appends = ['quantity', 'is_purchasable', 'availability_label'];
 
     protected $hidden = ['stock_quantity'];
 
@@ -51,11 +74,123 @@ class Product extends Model
         'warranty_months' => 'integer',
         'views_count' => 'integer',
         'sold_count' => 'integer',
+        'kiot_product_id' => 'integer',
+        'remote_product_id' => 'integer',
+        'kiot_sellable' => 'boolean',
+        'kiot_is_under_repair' => 'boolean',
+        'kiot_has_serial' => 'boolean',
+        'kiot_physical_quantity' => 'integer',
+        'kiot_reserved_quantity' => 'integer',
+        'kiot_available_quantity' => 'integer',
+        'kiot_retail_price' => 'decimal:2',
+        'kiot_selected_price' => 'decimal:0',
+        'kiot_price_fallback_used' => 'boolean',
+        'show_on_pc_website' => 'boolean',
+        'kiot_remote_updated_at' => 'datetime',
+        'kiot_synced_at' => 'datetime',
     ];
 
     public function getQuantityAttribute(): int
     {
         return $this->stock_quantity;
+    }
+
+    public function scopeSellableOnline(Builder $query): Builder
+    {
+        return $query->visibleOnStorefront()
+            ->where(function (Builder $query) {
+                $query->where(function (Builder $query) {
+                    $query->whereNull('provider')
+                        ->where('stock_quantity', '>', 0);
+                })
+                    ->orWhere(function (Builder $query) {
+                        $query->where('provider', 'kiot')
+                            ->where('kiot_sellable', true)
+                            ->where('kiot_sync_status', 'active')
+                            ->where('kiot_availability_status', 'available')
+                            ->where('kiot_available_quantity', '>', 0)
+                            ->where('price', '>', 0);
+                    });
+            });
+    }
+
+    public function scopeVisibleOnStorefront(Builder $query): Builder
+    {
+        return $query->where('is_active', true)
+            ->where('show_on_pc_website', true)
+            ->where(function (Builder $query) {
+                $query->where(function (Builder $query) {
+                    $query->whereNull('provider')
+                        ->where('stock_quantity', '>', 0);
+                })->orWhere(function (Builder $query) {
+                    $query->where('provider', 'kiot')
+                        ->where('kiot_sync_status', 'active')
+                        ->whereHas('category', fn (Builder $query) => $query->visibleOnStorefront());
+                });
+            });
+    }
+
+    public function isSellableOnline(): bool
+    {
+        if (! $this->isVisibleOnStorefront()) {
+            return false;
+        }
+
+        if ($this->provider !== 'kiot') {
+            return $this->stock_quantity > 0
+                && ($this->inventory_source === 'local'
+                    || ($this->inventory_source === 'kiot' && $this->kiot_sellable));
+        }
+
+        return $this->kiot_sellable
+            && $this->kiot_sync_status === 'active'
+            && $this->kiot_availability_status === 'available'
+            && (int) $this->kiot_available_quantity > 0
+            && (int) $this->price > 0;
+    }
+
+    public function isVisibleOnStorefront(): bool
+    {
+        if ($this->provider !== 'kiot') {
+            return $this->is_active && $this->show_on_pc_website && $this->stock_quantity > 0;
+        }
+
+        $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+
+        return $this->is_active
+            && $this->show_on_pc_website
+            && $category?->isVisibleOnStorefront()
+            && $this->kiot_sync_status === 'active';
+    }
+
+    public function getIsPurchasableAttribute(): bool
+    {
+        return $this->isSellableOnline();
+    }
+
+    public function getAvailabilityLabelAttribute(): string
+    {
+        if ($this->inventory_source !== 'kiot') {
+            return $this->stock_quantity > 0 ? 'Còn hàng' : 'Hết hàng';
+        }
+        if ((int) $this->price <= 0) {
+            return 'Liên hệ';
+        }
+
+        return match ($this->kiot_availability_status) {
+            'repairing' => 'Đang sửa chữa',
+            'reserved' => 'Tạm thời không sẵn hàng',
+            'sold' => 'Hết hàng',
+            'inactive', 'deleted' => 'Ngừng kinh doanh',
+            default => $this->isSellableOnline() ? 'Còn hàng' : 'Tạm thời không sẵn hàng',
+        };
+    }
+
+    public function purchasableUnitPrice(): int
+    {
+        return (int) ($this->inventory_source === 'kiot'
+            ? $this->price
+            : ($this->sale_price ?? $this->price));
     }
 
     public function category(): BelongsTo
@@ -133,7 +268,9 @@ class Product extends Model
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             $parts = explode(':', $line, 2);
             if (count($parts) === 2) {
