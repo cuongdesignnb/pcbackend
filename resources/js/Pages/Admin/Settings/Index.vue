@@ -2,6 +2,7 @@
 import { useForm, Link } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import MediaPicker from '@/Components/MediaPicker.vue';
 
 const props = defineProps({
     settings: Object,
@@ -135,8 +136,40 @@ function getSettingsForGroup(group) {
                                         <span v-if="!item.is_public" class="text-xs text-slate-500 ml-1">(nội bộ)</span>
                                     </label>
 
-                                    <!-- Text / Image URL / Color input -->
-                                    <template v-if="item.type === 'text' || item.type === 'image' || item.type === 'color'">
+                                    <!-- Image picker (Logo, Favicon, etc.) -->
+                                    <template v-if="item.type === 'image'">
+                                        <div class="flex items-start gap-4">
+                                            <!-- Preview -->
+                                            <div v-if="formData[item.key]" class="relative group flex-shrink-0">
+                                                <div class="w-28 h-28 rounded-xl border border-slate-700/50 bg-slate-800/60 flex items-center justify-center p-2 overflow-hidden">
+                                                    <img :src="formData[item.key]" :alt="item.label" class="max-w-full max-h-full object-contain" />
+                                                </div>
+                                                <!-- Remove button -->
+                                                <button
+                                                    type="button"
+                                                    @click="formData[item.key] = ''"
+                                                    class="absolute -top-2 -right-2 w-6 h-6 bg-red-500/90 hover:bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                            <!-- Empty state -->
+                                            <div v-else class="w-28 h-28 rounded-xl border-2 border-dashed border-slate-700/50 bg-slate-800/30 flex items-center justify-center flex-shrink-0">
+                                                <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <!-- Picker controls -->
+                                            <div class="flex flex-col gap-2 pt-1">
+                                                <MediaPicker
+                                                    v-model="formData[item.key]"
+                                                    :label="''"
+                                                />
+                                                <p class="text-xs text-slate-500">Chọn từ thư viện Media hoặc upload ảnh mới</p>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- Text / Color input -->
+                                    <template v-else-if="item.type === 'text' || item.type === 'color'">
                                         <input
                                             v-model="formData[item.key]"
                                             :type="item.type === 'color' ? 'color' : 'text'"
@@ -146,10 +179,6 @@ function getSettingsForGroup(group) {
                                                 item.type === 'color' ? 'h-10 p-1' : ''
                                             ]"
                                         />
-                                        <!-- Image preview -->
-                                        <div v-if="item.type === 'image' && formData[item.key]" class="mt-2">
-                                            <img :src="formData[item.key]" class="h-12 object-contain rounded border border-slate-800/60 p-1 bg-slate-800/40" />
-                                        </div>
                                     </template>
 
                                     <!-- Textarea -->

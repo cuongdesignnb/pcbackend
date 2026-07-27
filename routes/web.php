@@ -1,7 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AiArticleController;
+use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BannerController;
-use App\Http\Controllers\Admin\FilterController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CompatibilityController;
@@ -9,6 +10,8 @@ use App\Http\Controllers\Admin\ComponentTypeController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FilterController;
+use App\Http\Controllers\Admin\KiotIntegrationController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\OrderController;
@@ -17,8 +20,9 @@ use App\Http\Controllers\Admin\PostCategoryController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
-use App\Http\Controllers\Admin\AiArticleController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,8 +44,18 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::post('/ipn', [PaymentController::class, 'ipn'])->name('ipn');
 });
 
-// Admin routes
-Route::prefix('admin')->middleware(['web'])->name('admin.')->group(function () {
+// ─── Admin Auth Routes (guest only) ─────────────────────────────────────────
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login'])->name('login.submit');
+});
+
+// ─── Admin Protected Routes ─────────────────────────────────────────────────
+Route::prefix('admin')->middleware(['web', 'admin.auth'])->name('admin.')->group(function () {
+    // Logout
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Products
@@ -120,6 +134,26 @@ Route::prefix('admin')->middleware(['web'])->name('admin.')->group(function () {
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
 
+    Route::middleware('permission:settings.view')->group(function () {
+        Route::get('integrations/kiot', [KiotIntegrationController::class, 'index'])->name('integrations.kiot.index');
+    });
+    Route::middleware('permission:settings.edit')->group(function () {
+        Route::post('integrations/kiot/pair', [KiotIntegrationController::class, 'pair'])->name('integrations.kiot.pair');
+        Route::post('integrations/kiot/manual', [KiotIntegrationController::class, 'manual'])->name('integrations.kiot.manual');
+        Route::post('integrations/kiot/import-environment', [KiotIntegrationController::class, 'importEnvironment'])->name('integrations.kiot.import-environment');
+        Route::post('integrations/kiot/test-connection', [KiotIntegrationController::class, 'testConnection'])->name('integrations.kiot.test-connection');
+        Route::patch('integrations/kiot/flags', [KiotIntegrationController::class, 'updateFlags'])->name('integrations.kiot.flags');
+        Route::post('integrations/kiot/disconnect', [KiotIntegrationController::class, 'disconnect'])->name('integrations.kiot.disconnect');
+        Route::post('integrations/kiot/dry-run', [KiotIntegrationController::class, 'dryRun'])->name('integrations.kiot.dry-run');
+        Route::post('integrations/kiot/test-one', [KiotIntegrationController::class, 'testSku'])->name('integrations.kiot.test-one');
+        Route::post('integrations/kiot/sync-one', [KiotIntegrationController::class, 'syncOne'])->name('integrations.kiot.sync-one');
+        Route::post('integrations/kiot/sync', [KiotIntegrationController::class, 'sync'])->name('integrations.kiot.sync');
+        Route::post('integrations/kiot/incremental', [KiotIntegrationController::class, 'incremental'])->name('integrations.kiot.incremental');
+        Route::get('integrations/kiot/runs/{run}', [KiotIntegrationController::class, 'showRun'])->name('integrations.kiot.runs.show');
+        Route::post('integrations/kiot/retry', [KiotIntegrationController::class, 'retry'])->name('integrations.kiot.retry');
+        Route::post('integrations/kiot/events/{event}/retry', [KiotIntegrationController::class, 'retryEvent'])->name('integrations.kiot.events.retry');
+    });
+
     // AI Articles
     Route::get('ai-articles', [AiArticleController::class, 'index'])->name('ai-articles.index');
     Route::get('ai-articles/create', [AiArticleController::class, 'create'])->name('ai-articles.create');
@@ -128,4 +162,16 @@ Route::prefix('admin')->middleware(['web'])->name('admin.')->group(function () {
     Route::post('ai-articles/{aiArticle}/run', [AiArticleController::class, 'run'])->name('ai-articles.run');
     Route::delete('ai-articles/{aiArticle}', [AiArticleController::class, 'destroy'])->name('ai-articles.destroy');
     Route::post('ai-articles/generate-single', [AiArticleController::class, 'generateSingle'])->name('ai-articles.generate-single');
+
+    // ─── User & Role Management (restricted to users with permission) ────
+    Route::middleware('permission:users.view')->group(function () {
+        Route::resource('users', UserController::class);
+    });
+
+    Route::middleware('permission:roles.view')->group(function () {
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    });
 });
