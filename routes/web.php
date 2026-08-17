@@ -172,18 +172,56 @@ Route::prefix('admin')->middleware(['web', 'admin.auth'])->name('admin.')->group
             ->name('integrations.catalog-channels.google-sheets.dry-run');
         Route::post('integrations/catalog-channels/google-sheets/sync', [CatalogChannelController::class, 'syncGoogleSheets'])
             ->name('integrations.catalog-channels.google-sheets.sync');
+        Route::post('integrations/catalog-channels/price-books/sync', [CatalogChannelController::class, 'syncPriceBooks'])
+            ->name('integrations.catalog-channels.price-books.sync');
+        Route::post('integrations/catalog-channels/product-prices/sync', [CatalogChannelController::class, 'syncProductPrices'])
+            ->name('integrations.catalog-channels.product-prices.sync');
         Route::patch('integrations/catalog-channels/{channel}/flags', [CatalogChannelController::class, 'updateFlags'])
             ->whereIn('channel', ['google_merchant', 'meta_catalog'])
             ->name('integrations.catalog-channels.flags');
         Route::post('integrations/catalog-channels/{channel}/validate', [CatalogChannelController::class, 'validateFeed'])
             ->whereIn('channel', ['google_merchant', 'meta_catalog'])
             ->name('integrations.catalog-channels.validate');
+        Route::post('integrations/catalog-channels/meta_catalog/test-connection', [CatalogChannelController::class, 'testMetaConnection'])
+            ->name('integrations.catalog-channels.meta_catalog.test-connection');
         Route::post('integrations/catalog-channels/{channel}/rebuild', [CatalogChannelController::class, 'rebuildFeed'])
             ->whereIn('channel', ['google_merchant', 'meta_catalog'])
             ->name('integrations.catalog-channels.rebuild');
         Route::post('integrations/catalog-channels/{channel}/rotate-token', [CatalogChannelController::class, 'rotateToken'])
             ->whereIn('channel', ['google_merchant', 'meta_catalog'])
             ->name('integrations.catalog-channels.rotate-token');
+    });
+
+    Route::middleware('permission:catalog-channels.manage|catalog_channels.manage_pricing')->group(function () {
+        Route::patch('integrations/catalog-channels/{channel}/price', [CatalogChannelController::class, 'updatePriceSelection'])
+            ->whereIn('channel', ['website', 'google_sheets', 'google_merchant', 'meta_catalog'])
+            ->name('integrations.catalog-channels.price');
+    });
+    Route::middleware('permission:catalog-channels.manage|catalog_channels.manage_google_sheets')->group(function () {
+        Route::patch('integrations/catalog-channels/google-sheets/price-columns', [CatalogChannelController::class, 'updateGoogleSheetsPriceColumns'])
+            ->name('integrations.catalog-channels.google-sheets.price-columns');
+    });
+
+    Route::middleware('permission:catalog-channels.view|catalog_channels.view')->group(function () {
+        Route::get('integrations/catalog-products', [CatalogChannelController::class, 'catalogProducts'])
+            ->name('integrations.catalog-products.index');
+    });
+    Route::middleware('permission:catalog-channels.manage|catalog_channels.preview')->group(function () {
+        Route::post('integrations/catalog-products/preview', [CatalogChannelController::class, 'previewCatalogProducts'])
+            ->name('integrations.catalog-products.preview');
+    });
+    Route::middleware('permission:catalog-channels.manage|catalog_channels.sync')->group(function () {
+        Route::post('integrations/catalog-products/sync', [CatalogChannelController::class, 'syncCatalogProducts'])
+            ->name('integrations.catalog-products.sync');
+    });
+    Route::middleware('permission:catalog-channels.manage|catalog_channels.export_validation')->group(function () {
+        Route::post('integrations/catalog-products/export-validation', [CatalogChannelController::class, 'exportCatalogValidation'])
+            ->name('integrations.catalog-products.export-validation');
+    });
+    Route::middleware('permission:catalog-channels.manage|catalog_channels.bulk_manage')->group(function () {
+        Route::post('integrations/catalog-products/bulk/{action}', [CatalogChannelController::class, 'bulkCatalogChannelAction'])
+            ->whereIn('action', ['enable', 'disable', 'reset'])
+            ->name('integrations.catalog-products.bulk');
     });
 
     // AI Articles
