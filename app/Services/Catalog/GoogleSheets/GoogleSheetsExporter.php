@@ -8,9 +8,12 @@ use App\Models\CatalogChannelConnection;
 use App\Models\CatalogChannelItemState;
 use App\Models\CatalogChannelSyncConflict;
 use App\Models\CatalogChannelSyncRun;
+use App\Models\CatalogGoogleSheetPriceColumn;
 use App\Services\Catalog\CatalogChannelManager;
 use App\Services\Catalog\CatalogProductProjectionService;
 use App\Services\Catalog\CatalogProductValidator;
+use App\Services\Catalog\Pricing\CatalogChannelPriceSettingsService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 
@@ -20,6 +23,9 @@ class GoogleSheetsExporter
         'external_id', 'sku', 'name', 'category', 'brand', 'price', 'currency', 'inventory',
         'availability', 'is_visible', 'is_active', 'is_under_repair', 'product_url', 'image_url',
         'validation_status', 'validation_errors', 'provider_updated_at', 'synced_at', 'checksum',
+        'condition', 'stock_quantity', 'available_quantity', 'repair_status', 'retail_price',
+        'selected_website_price', 'selected_google_price', 'selected_meta_price', 'google_eligible',
+        'meta_eligible', 'last_synced_at',
     ];
 
     public function __construct(
@@ -27,6 +33,7 @@ class GoogleSheetsExporter
         private readonly CatalogProductProjectionService $projection,
         private readonly CatalogProductValidator $validator,
         private readonly CatalogChannelManager $channels,
+        private readonly CatalogChannelPriceSettingsService $priceSettings,
     ) {}
 
     public function dryRun(?int $requestedBy = null): array
@@ -103,14 +110,17 @@ class GoogleSheetsExporter
 
     private function prepare(array $existingRows, array $configuration, bool $dryRun): array
     {
-        $headers = isset($existingRows[0]) ? array_map('strval', $existingRows[0]) : [];
-        $headerMatches = $headers === self::HEADERS;
+        $selectedColumns = $this->priceSettings->googleSheetsColumns();
+        $headers = $this->headers($selectedColumns);
+        $existingHeaders = isset($existingRows[0]) ? array_map('strval', $existingRows[0]) : [];
+        $headerMatches = $existingHeaders === $headers;
+        $headerIndex = array_flip($headers);
         $existing = [];
         $existingSkus = [];
         $duplicateSheetIds = [];
         if ($headerMatches) {
             foreach (array_slice($existingRows, 1, null, true) as $offset => $row) {
-                $externalId = trim((string) ($row[0] ?? ''));
+                $externalId = trim((string) ($row[$headerIndex['external_id']] ?? ''));
                 if ($externalId === '') {
                     continue;
                 }
@@ -119,8 +129,8 @@ class GoogleSheetsExporter
 
                     continue;
                 }
-                $existing[$externalId] = ['row' => $offset + 1, 'checksum' => (string) ($row[18] ?? '')];
-                $sheetSku = mb_strtolower(trim((string) ($row[1] ?? '')));
+                $existing[$externalId] = ['row' => $offset + 1, 'checksum' => (string) ($row[$headerIndex['checksum']] ?? '')];
+                $sheetSku = mb_strtolower(trim((string) ($row[$headerIndex['sku']] ?? '')));
                 if ($sheetSku !== '') {
                     $existingSkus[$sheetSku] = $externalId;
                 }
@@ -130,13 +140,14 @@ class GoogleSheetsExporter
         $ranges = $headerMatches ? [] : [[
             'range' => $this->client->rowRange($configuration, 1),
             'majorDimension' => 'ROWS',
-            'values' => [self::HEADERS],
+            'values' => [$headers],
         ]];
         $nextRow = $headerMatches ? max(2, count($existingRows) + 1) : 2;
         $seenExternal = [];
         $seenSku = [];
         $states = [];
         $counts = [
+            'SELECTED_PRICE_COLUMNS' => $selectedColumns->pluck('column_key')->values()->all(),
             'TOTAL_PRODUCTS' => 0,
             'VALID_PRODUCTS' => 0,
             'INVALID_PRODUCTS' => 0,
@@ -151,11 +162,16 @@ class GoogleSheetsExporter
 
         $this->projection->each(function (CatalogProductData $product) use (
             &$counts, &$ranges, &$nextRow, &$seenExternal, &$seenSku, &$states,
-            $existing, $existingSkus, $duplicateSheetIds, $configuration, $dryRun,
+            $existing, $existingSkus, $duplicateSheetIds, $configuration, $dryRun, $headers, $selectedColumns,
         ): void {
             $counts['TOTAL_PRODUCTS']++;
             $validation = $this->validator->validate($product);
             $errors = $validation->errors;
+            foreach ($product->priceIssues as $issue) {
+                if ($issue !== null) {
+                    $errors[] = $issue;
+                }
+            }
             $skuKey = mb_strtolower($product->sku);
             if (isset($seenExternal[$product->externalId]) || isset($duplicateSheetIds[$product->externalId])) {
                 $errors[] = 'DUPLICATE_EXTERNAL_ID';
@@ -207,7 +223,7 @@ class GoogleSheetsExporter
             $ranges[] = [
                 'range' => $this->client->rowRange($configuration, $rowNumber),
                 'majorDimension' => 'ROWS',
-                'values' => [$this->row($product, $validation->status($product), $errors)],
+                'values' => [$this->row($product, $validation->status($product), $errors, $headers, $selectedColumns)],
             ];
             $states[] = [
                 'product_id' => $product->id,
@@ -224,29 +240,82 @@ class GoogleSheetsExporter
         return ['summary' => $counts, 'ranges' => $ranges, 'states' => $states];
     }
 
-    private function row(CatalogProductData $product, string $status, array $errors): array
-    {
-        return [
-            $this->safeText($product->externalId),
-            $this->safeText($product->sku),
-            $this->safeText($product->title),
-            $this->safeText($product->categoryPath),
-            $this->safeText($product->brand),
-            $product->price,
-            $product->currency,
-            $product->inventory,
-            $product->availability,
-            $product->isVisible,
-            $product->isActive,
-            $product->isUnderRepair,
-            $this->safeText($product->productUrl),
-            $this->safeText($product->imageUrl),
-            $status,
-            implode('|', $errors),
-            $product->updatedAt->toIso8601String(),
-            now()->toIso8601String(),
-            $product->checksum,
+    /** @param Collection<int, CatalogGoogleSheetPriceColumn> $selectedColumns */
+    private function row(
+        CatalogProductData $product,
+        string $status,
+        array $errors,
+        array $headers,
+        Collection $selectedColumns,
+    ): array {
+        $google = $product->withPrice($product->priceFor('google_merchant'));
+        $meta = $product->withPrice($product->priceFor('meta_catalog'));
+        $googleEligible = $this->validator->validate($google)->valid;
+        $metaEligible = $this->validator->validate($meta)->valid;
+        $values = [
+            'external_id' => $this->safeText($product->externalId),
+            'sku' => $this->safeText($product->sku),
+            'name' => $this->safeText($product->title),
+            'category' => $this->safeText($product->categoryPath),
+            'brand' => $this->safeText($product->brand),
+            'price' => $product->price,
+            'inventory' => $product->inventory,
+            'availability' => $product->availability,
+            'is_under_repair' => $product->isUnderRepair,
+            'condition' => $product->condition,
+            'stock_quantity' => $product->inventory,
+            'available_quantity' => $product->inventory,
+            'repair_status' => $product->isUnderRepair ? 'repairing' : 'ready',
+            'is_active' => $product->isActive,
+            'is_visible' => $product->isVisible,
+            'retail_price' => $product->price,
+            'selected_website_price' => $product->priceFor('website'),
+            'selected_google_price' => $product->priceFor('google_merchant'),
+            'selected_meta_price' => $product->priceFor('meta_catalog'),
+            'currency' => $product->currency,
+            'product_url' => $this->safeText($product->productUrl),
+            'image_url' => $this->safeText($product->imageUrl),
+            'google_eligible' => $googleEligible,
+            'meta_eligible' => $metaEligible,
+            'validation_status' => $status,
+            'validation_errors' => implode('|', $errors),
+            'provider_updated_at' => $product->updatedAt->toIso8601String(),
+            'synced_at' => now()->toIso8601String(),
+            'last_synced_at' => now()->toIso8601String(),
+            'checksum' => $product->checksum,
         ];
+        foreach ($product->priceBooks as $bookId => $price) {
+            $values['price_book_'.$bookId] = $price;
+        }
+        foreach ($selectedColumns as $column) {
+            $values[$column->column_key] = $this->valueForSource($product, $column->price_source, $column->price_book_id);
+        }
+
+        return array_map(fn (string $header) => $values[$header] ?? '', $headers);
+    }
+
+    /** @param Collection<int, CatalogGoogleSheetPriceColumn> $selectedColumns */
+    private function headers(Collection $selectedColumns): array
+    {
+        $headers = self::HEADERS;
+        foreach ($selectedColumns as $column) {
+            if (! in_array($column->column_key, $headers, true)) {
+                $headers[] = $column->column_key;
+            }
+        }
+
+        return $headers;
+    }
+
+    private function valueForSource(CatalogProductData $product, string $source, ?int $priceBookId): ?int
+    {
+        return match ($source) {
+            'retail_price' => $product->price,
+            'selected_price' => $product->selectedPrice,
+            default => str_starts_with($source, 'price_book:') && $priceBookId !== null
+                ? data_get($product->priceBooks, $priceBookId)
+                : null,
+        };
     }
 
     private function safeText(string $value): string
