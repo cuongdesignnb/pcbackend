@@ -4,6 +4,7 @@ import { useForm, Link } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import RichEditor from '@/Components/RichEditor.vue';
 import MediaPicker from '@/Components/MediaPicker.vue';
+import AiGeneratePanel from '@/Components/AiGeneratePanel.vue';
 
 const props = defineProps({
     product: Object,
@@ -36,11 +37,21 @@ const form = useForm({
     stock_quantity: props.product.stock_quantity ?? 0,
     is_active: props.product.is_active ?? true,
     is_featured: props.product.is_featured || false,
+    show_on_pc_website: props.product.show_on_pc_website ?? true,
     warranty_months: props.product.warranty_months || 12,
     meta_title: props.product.meta_title || '',
     meta_description: props.product.meta_description || '',
     thumbnail: primaryImg ? primaryImg.url : '',
     gallery: galleryImgs,
+    variants: (props.product.variants || []).map(variant => ({
+        id: variant.id,
+        name: variant.name,
+        sku: variant.sku || '',
+        price: variant.price,
+        sale_price: variant.sale_price || '',
+        stock_quantity: variant.stock_quantity ?? 0,
+        is_active: variant.is_active ?? true,
+    })),
     specifications_text: props.product.specifications_text || '',
     compatibility_specs: [],
 });
@@ -80,6 +91,29 @@ if (form.component_type_id) {
 }
 
 function submit() { form.put(`/admin/products/${props.product.id}`); }
+
+function applyAi(data) {
+    form.description = data.content || data.body || form.description;
+    form.short_description = data.short_description || data.excerpt || form.short_description;
+    form.meta_title = data.meta_title || form.meta_title;
+    form.meta_description = data.meta_description || form.meta_description;
+    if (data.thumbnail) form.thumbnail = data.thumbnail;
+}
+
+function addVariant() {
+    form.variants.push({
+        name: '',
+        sku: '',
+        price: form.price || 0,
+        sale_price: '',
+        stock_quantity: 0,
+        is_active: true,
+    });
+}
+
+function removeVariant(index) {
+    form.variants.splice(index, 1);
+}
 </script>
 <template>
 <AdminLayout title="Sửa sản phẩm">
@@ -109,6 +143,7 @@ function submit() { form.put(`/admin/products/${props.product.id}`); }
                         <div class="flex items-center gap-4 mt-2">
                             <label class="flex items-center gap-2 text-sm"><input v-model="form.is_active" type="checkbox" class="rounded border-slate-700/50 text-cyan-500"> Đang bán</label>
                             <label class="flex items-center gap-2 text-sm"><input v-model="form.is_featured" type="checkbox" class="rounded border-slate-700/50 text-cyan-500"> Nổi bật</label>
+                            <label class="flex items-center gap-2 text-sm"><input v-model="form.show_on_pc_website" type="checkbox" class="rounded border-slate-700/50 text-cyan-500"> Hiển thị trên website</label>
                         </div>
                     </div>
                 </div>
@@ -124,7 +159,22 @@ function submit() { form.put(`/admin/products/${props.product.id}`); }
                     </div>
                 </div>
                 <div><label class="block text-sm font-medium text-slate-300 mb-1">Mô tả ngắn</label><textarea v-model="form.short_description" rows="2" class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"></textarea></div>
-                <div><label class="block text-sm font-medium text-slate-300 mb-1">Mô tả chi tiết</label><RichEditor v-model="form.description" placeholder="Nhập mô tả chi tiết sản phẩm..." /></div>
+                <div class="rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-violet-100">Trợ lý viết mô tả bằng AI</p>
+                            <p class="mt-1 text-xs text-slate-400">Tạo nội dung từ tên, thông tin và mô tả hiện có của sản phẩm. Bạn vẫn có thể chỉnh sửa trước khi lưu.</p>
+                        </div>
+                        <AiGeneratePanel type="product_description" :topic="form.name" :product-id="product.id" :existing-content="form.description" @generated="applyAi" />
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <label class="block text-sm font-medium text-slate-300">Mô tả chi tiết</label>
+                        <span class="text-xs text-slate-500">Có thể định dạng tiêu đề, danh sách, ảnh và bảng</span>
+                    </div>
+                    <RichEditor v-model="form.description" placeholder="Nhập mô tả chi tiết sản phẩm..." min-height="360px" />
+                </div>
             </div>
 
             <!-- Hình ảnh -->
@@ -165,6 +215,34 @@ function submit() { form.put(`/admin/products/${props.product.id}`); }
                     <div><dt class="text-slate-500">Trạng thái sync</dt><dd class="mt-1 text-slate-200">{{ product.kiot_sync_status }}</dd></div>
                     <div><dt class="text-slate-500">Đồng bộ lúc</dt><dd class="mt-1 text-slate-200">{{ product.kiot_synced_at ? new Date(product.kiot_synced_at).toLocaleString('vi-VN') : '—' }}</dd></div>
                 </dl>
+            </div>
+
+            <!-- Biến thể -->
+            <div class="bg-slate-900 rounded-lg shadow-none border border-slate-800/60 p-6 space-y-4">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">Biến thể sản phẩm</h4>
+                        <p class="text-xs text-slate-400 mt-1">Mỗi biến thể có tên, SKU, giá và tồn kho riêng. Không cần tạo sản phẩm liên quan.</p>
+                    </div>
+                    <button type="button" @click="addVariant" class="shrink-0 px-3 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700">+ Thêm biến thể</button>
+                </div>
+                <div v-if="!form.variants.length" class="rounded-lg border border-dashed border-slate-700 px-4 py-5 text-sm text-slate-500 text-center">Chưa có biến thể. Sản phẩm sẽ dùng giá và tồn kho chính.</div>
+                <div v-else class="space-y-3">
+                    <div v-for="(variant, index) in form.variants" :key="variant.id || `new-${index}`" class="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-semibold text-slate-300">Biến thể {{ index + 1 }}</span>
+                            <button type="button" @click="removeVariant(index)" class="text-xs text-red-400 hover:text-red-300">Xóa</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+                            <label class="lg:col-span-2"><span class="block text-xs text-slate-400 mb-1">Tên biến thể *</span><input v-model="variant.name" placeholder="Macbook Neo · RAM 16GB" class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"></label>
+                            <label><span class="block text-xs text-slate-400 mb-1">SKU</span><input v-model="variant.sku" placeholder="SKU-001" class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"></label>
+                            <label><span class="block text-xs text-slate-400 mb-1">Giá *</span><input v-model="variant.price" type="number" min="0" class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"></label>
+                            <label><span class="block text-xs text-slate-400 mb-1">Giá khuyến mại</span><input v-model="variant.sale_price" type="number" min="0" class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"></label>
+                            <label><span class="block text-xs text-slate-400 mb-1">Tồn kho *</span><input v-model="variant.stock_quantity" type="number" min="0" class="w-full border border-slate-700/50 rounded-lg px-3 py-2 text-sm"></label>
+                        </div>
+                        <label class="inline-flex items-center gap-2 mt-3 text-sm text-slate-300"><input v-model="variant.is_active" type="checkbox" class="rounded border-slate-700/50 text-cyan-500"> Hiển thị biến thể này</label>
+                    </div>
+                </div>
             </div>
 
             <!-- Thông số kỹ thuật -->

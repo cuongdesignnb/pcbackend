@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicAssetUrl;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +19,7 @@ class Media extends Model
         'width',
         'height',
         'alt',
+        'caption',
         'folder',
         'uploaded_by',
     ];
@@ -33,16 +35,17 @@ class Media extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk($this->disk)->url($this->path);
+        return (string) PublicAssetUrl::normalize(Storage::disk($this->disk)->url($this->path));
     }
 
     public function getThumbnailUrlAttribute(): string
     {
         // If a thumbnail exists, use it; otherwise use original
-        $thumbPath = 'thumbnails/' . $this->path;
+        $thumbPath = 'thumbnails/'.$this->path;
         if (Storage::disk($this->disk)->exists($thumbPath)) {
-            return Storage::disk($this->disk)->url($thumbPath);
+            return (string) PublicAssetUrl::normalize(Storage::disk($this->disk)->url($thumbPath));
         }
+
         return $this->url;
     }
 
@@ -50,12 +53,13 @@ class Media extends Model
     {
         $bytes = $this->size;
         if ($bytes >= 1048576) {
-            return round($bytes / 1048576, 1) . ' MB';
+            return round($bytes / 1048576, 1).' MB';
         }
         if ($bytes >= 1024) {
-            return round($bytes / 1024, 1) . ' KB';
+            return round($bytes / 1024, 1).' KB';
         }
-        return $bytes . ' B';
+
+        return $bytes.' B';
     }
 
     // ---- Helpers ----

@@ -29,9 +29,9 @@ class GoogleSheetsClient
         return ['spreadsheet_id' => (string) $response->json('spreadsheetId'), 'worksheet' => $worksheet];
     }
 
-    public function readRows(array $configuration): array
+    public function readRows(array $configuration, int $columnCount): array
     {
-        $range = $this->quotedWorksheet($configuration).'!A:S';
+        $range = $this->quotedWorksheet($configuration).'!A:'.$this->columnName($columnCount);
         $response = $this->request($configuration)->get(
             $this->spreadsheetUrl($configuration).'/values:batchGet',
             ['majorDimension' => 'ROWS', 'ranges' => $range],
@@ -41,11 +41,13 @@ class GoogleSheetsClient
         return (array) $response->json('valueRanges.0.values', []);
     }
 
-    public function writeRows(array $configuration, array $ranges): void
+    public function writeRows(array $configuration, array $ranges, int $columnCount): void
     {
         if ($ranges === []) {
             return;
         }
+
+        $this->ensureColumnCapacity($configuration, $columnCount);
 
         foreach (array_chunk($ranges, max(1, (int) config('catalog.sync_chunk_size', 250))) as $chunk) {
             $response = $this->request($configuration)->post(
@@ -56,9 +58,48 @@ class GoogleSheetsClient
         }
     }
 
-    public function rowRange(array $configuration, int $row): string
+    private function ensureColumnCapacity(array $configuration, int $columnCount): void
     {
-        return $this->quotedWorksheet($configuration)."!A{$row}:S{$row}";
+        $response = $this->request($configuration)->get($this->spreadsheetUrl($configuration), [
+            'fields' => 'sheets.properties',
+        ]);
+        $this->assertSuccessful($response, 'GOOGLE_WRITE_FAILED');
+
+        $worksheet = (string) ($configuration['worksheet'] ?? 'Products');
+        $sheet = collect($response->json('sheets', []))->first(
+            fn (array $candidate): bool => data_get($candidate, 'properties.title') === $worksheet,
+        );
+        if (! is_array($sheet)) {
+            throw new CatalogChannelException('GOOGLE_WORKSHEET_NOT_FOUND', 'Không tìm thấy worksheet đã cấu hình.');
+        }
+
+        $sheetId = (int) data_get($sheet, 'properties.sheetId', -1);
+        $currentColumnCount = (int) data_get($sheet, 'properties.gridProperties.columnCount', 0);
+        if ($currentColumnCount >= $columnCount) {
+            return;
+        }
+        if ($sheetId < 0) {
+            throw new CatalogChannelException('GOOGLE_INVALID_RESPONSE', 'Google Sheets worksheet metadata không hợp lệ.');
+        }
+
+        $response = $this->request($configuration)->post(
+            $this->spreadsheetUrl($configuration).':batchUpdate',
+            [
+                'requests' => [[
+                    'appendDimension' => [
+                        'sheetId' => $sheetId,
+                        'dimension' => 'COLUMNS',
+                        'length' => $columnCount - $currentColumnCount,
+                    ],
+                ]],
+            ],
+        );
+        $this->assertSuccessful($response, 'GOOGLE_WRITE_FAILED');
+    }
+
+    public function rowRange(array $configuration, int $row, int $columnCount): string
+    {
+        return $this->quotedWorksheet($configuration)."!A{$row}:{$this->columnName($columnCount)}{$row}";
     }
 
     private function request(array $configuration): PendingRequest
@@ -142,6 +183,22 @@ class GoogleSheetsClient
         }
 
         return "'".str_replace("'", "''", $worksheet)."'";
+    }
+
+    private function columnName(int $columnCount): string
+    {
+        if ($columnCount < 1) {
+            throw new CatalogChannelException('GOOGLE_INVALID_RESPONSE', 'Google Sheets range không hợp lệ.');
+        }
+
+        $name = '';
+        while ($columnCount > 0) {
+            $columnCount--;
+            $name = chr(65 + ($columnCount % 26)).$name;
+            $columnCount = intdiv($columnCount, 26);
+        }
+
+        return $name;
     }
 
     private function assertSuccessful(Response $response, string $fallbackCode): void
